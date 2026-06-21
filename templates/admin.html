@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}ניהול{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>ניהול</h1>
+      <p>שיעורים, משתמשים ותוכן</p>
+    </div>
+    <a href="/admin/lessons/new" class="btn btn-primary">+ שיעור חדש</a>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('lessons', this)" id="tab-btn-lessons">שיעורים ({{ lessons|length }})</button>
+    <button class="tab-btn" onclick="showTab('users', this)" id="tab-btn-users">תלמידים ({{ users|length }})</button>
+  </div>
+
+  <!-- Lessons Tab -->
+  <div class="tab-panel active" id="tab-lessons">
+    <div class="card">
+      {% if lessons %}
+      <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>שבוע</th>
+            <th>שיעור</th>
+            <th>נושא</th>
+            <th>רמה</th>
+            <th>מילים</th>
+            <th>פורסם</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lesson in lessons %}
+          <tr>
+            <td style="color:#94a3b8;font-weight:700">{{ lesson.week_number or '-' }}</td>
+            <td>
+              <div style="font-weight:600">{{ lesson.title }}</div>
+              <div style="font-size:0.75rem;color:#94a3b8">{{ lesson.created_at.strftime('%d/%m/%Y') }}</div>
+            </td>
+            <td>{{ lesson.topic }}</td>
+            <td>
+              <span class="badge badge-{{ 'info' if lesson.level == 'beginner' else ('warning' if lesson.level == 'intermediate' else 'muted') }}">
+                {{ 'מתחיל' if lesson.level == 'beginner' else ('בינוני' if lesson.level == 'intermediate' else 'מתקדם') }}
+              </span>
+            </td>
+            <td>{{ lesson.words | length }}</td>
+            <td>
+              <button class="badge {{ 'badge-success' if lesson.is_published else 'badge-muted' }}"
+                onclick="togglePublish({{ lesson.id }}, this)" style="border:none;cursor:pointer">
+                {{ 'פורסם' if lesson.is_published else 'טיוטה' }}
+              </button>
+            </td>
+            <td>
+              <div class="table-actions">
+                <a href="/lessons/{{ lesson.id }}" class="btn btn-outline btn-sm">תצוגה</a>
+                <a href="/admin/lessons/{{ lesson.id }}/edit" class="btn btn-warning btn-sm" style="color:white">עריכה</a>
+                <form method="post" action="/admin/lessons/{{ lesson.id }}/delete" onsubmit="return confirm('למחוק שיעור זה?')" style="display:inline">
+                  <button type="submit" class="btn btn-danger btn-sm">מחק</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <div class="text-center" style="padding:3rem">
+        <p class="text-muted">אין שיעורים עדיין.</p>
+        <a href="/admin/lessons/new" class="btn btn-primary mt-2">+ צור שיעור ראשון</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div class="tab-panel" id="tab-users">
+    <div class="card mb-2">
+      <h3 class="mb-2">הוסף תלמיד חדש</h3>
+      <form method="post" action="/admin/users/new" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.75rem;align-items:end">
+        <div class="form-group" style="margin:0">
+          <label>שם משתמש</label>
+          <input type="text" name="username" placeholder="שם משתמש" required>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>סיסמה</label>
+          <input type="password" name="password" placeholder="סיסמה" required minlength="4">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>רמה</label>
+          <select name="level">
+            <option value="beginner">מתחיל</option>
+            <option value="intermediate" selected>בינוני</option>
+            <option value="advanced">מתקדם</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">הוסף</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>שם משתמש</th>
+            <th>רמה</th>
+            <th>שיעורים שהושלמו</th>
+            <th>ממוצע ציון</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          {% set completed = u.progress | selectattr('quiz_stage2_done') | list | length %}
+          {% set scores = u.progress | selectattr('quiz_stage2_done') | map(attribute='stage2_score') | list %}
+          {% set avg = (scores | sum / scores | length) | int if scores else 0 %}
+          <tr>
+            <td>
+              <div style="font-weight:600">{{ u.username }}</div>
+              <div style="font-size:0.75rem;color:#94a3b8">{{ u.created_at.strftime('%d/%m/%Y') }}</div>
+            </td>
+            <td>
+              <select onchange="setLevel({{ u.id }}, this.value)"
+                style="padding:0.3rem 0.6rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.85rem">
+                <option value="beginner" {{ 'selected' if u.level == 'beginner' }}>מתחיל</option>
+                <option value="intermediate" {{ 'selected' if u.level == 'intermediate' or not u.level }}>בינוני</option>
+                <option value="advanced" {{ 'selected' if u.level == 'advanced' }}>מתקדם</option>
+              </select>
+            </td>
+            <td><span class="badge badge-{{ 'success' if completed > 0 else 'muted' }}">{{ completed }} שיעורים</span></td>
+            <td>
+              {% if avg > 0 %}
+              <span class="badge badge-{{ 'success' if avg >= 70 else 'warning' }}">{{ avg }}%</span>
+              {% else %}<span class="text-muted">-</span>{% endif %}
+            </td>
+            <td>
+              <form method="post" action="/admin/users/{{ u.id }}/delete"
+                onsubmit="return confirm('למחוק את {{ u.username }}?')" style="display:inline">
+                <button type="submit" class="btn btn-danger btn-sm">מחק</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+if (window.location.search.includes('tab=users')) {
+  showTab('users', document.getElementById('tab-btn-users'));
+}
+
+async function togglePublish(lessonId, btn) {
+  const res = await fetch(`/admin/lessons/${lessonId}/toggle-publish`, { method: 'POST' });
+  const data = await res.json();
+  if (data.ok) {
+    btn.textContent = data.published ? 'פורסם' : 'טיוטה';
+    btn.className = `badge ${data.published ? 'badge-success' : 'badge-muted'}`;
+    btn.style.cssText = 'border:none;cursor:pointer';
+  }
+}
+
+async function setLevel(userId, level) {
+  const res = await fetch(`/admin/users/${userId}/set-level`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ level })
+  });
+  if ((await res.json()).ok) {
+    // Show quick confirmation
+    const msg = document.createElement('span');
+    msg.textContent = ' ✓';
+    msg.style.color = '#22c55e';
+    event.target.parentNode.appendChild(msg);
+    setTimeout(() => msg.remove(), 1500);
+  }
+}
+</script>
+{% endblock %}

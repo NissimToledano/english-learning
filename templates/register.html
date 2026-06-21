@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>הרשמה | אנגלית לנוער</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div style="font-size:3rem;margin-bottom:0.5rem">📚</div>
+        <h1>הרשמה</h1>
+        <p>Create your learning account</p>
+      </div>
+
+      {% if error %}
+      <div class="auth-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/register">
+        <div class="form-group">
+          <label>שם משתמש</label>
+          <input type="text" name="username" placeholder="בחר שם משתמש" required autofocus>
+        </div>
+        <div class="form-group">
+          <label>אימייל (אופציונלי)</label>
+          <input type="email" name="email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label>סיסמה</label>
+          <input type="password" name="password" placeholder="לפחות 6 תווים" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem">
+          יצירת חשבון
+        </button>
+      </form>
+
+      <p class="text-muted text-center mt-2">
+        יש לך חשבון? <a href="/login">כניסה</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

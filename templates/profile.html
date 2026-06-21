@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}הפרופיל שלי{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:800px">
+  <div class="page-header">
+    <h1>👤 הפרופיל שלי</h1>
+    <p>{{ user.username }} | מצטרף מ-{{ user.created_at.strftime('%d/%m/%Y') }}</p>
+  </div>
+
+  <!-- Stats -->
+  {% set completed = progresses | selectattr('quiz_stage2_done') | list | length %}
+  {% set started = progresses | list | length %}
+  {% set total_s1 = progresses | selectattr('quiz_stage1_done') | map(attribute='stage1_score') | list %}
+  {% set total_s2 = progresses | selectattr('quiz_stage2_done') | map(attribute='stage2_score') | list %}
+  {% set avg_s1 = (total_s1 | sum / total_s1 | length) | int if total_s1 else 0 %}
+  {% set avg_s2 = (total_s2 | sum / total_s2 | length) | int if total_s2 else 0 %}
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem">
+    <div class="card text-center">
+      <div style="font-size:2.2rem;font-weight:800;color:#4f46e5">{{ started }}</div>
+      <div class="text-muted" style="font-size:0.875rem">שיעורים שהתחלתי</div>
+    </div>
+    <div class="card text-center">
+      <div style="font-size:2.2rem;font-weight:800;color:#22c55e">{{ completed }}</div>
+      <div class="text-muted" style="font-size:0.875rem">שיעורים שהשלמתי</div>
+    </div>
+    <div class="card text-center">
+      <div style="font-size:2.2rem;font-weight:800;color:#f59e0b">{{ avg_s1 }}%</div>
+      <div class="text-muted" style="font-size:0.875rem">ממוצע שלב 1</div>
+    </div>
+    <div class="card text-center">
+      <div style="font-size:2.2rem;font-weight:800;color:#06b6d4">{{ avg_s2 }}%</div>
+      <div class="text-muted" style="font-size:0.875rem">ממוצע שלב 2</div>
+    </div>
+  </div>
+
+  <!-- Progress Table -->
+  <div class="card">
+    <h3 class="mb-2">התקדמות לפי שיעור</h3>
+    {% if progresses %}
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>שיעור</th>
+          <th>קריאה</th>
+          <th>מילים</th>
+          <th>שלב 1</th>
+          <th>שלב 2</th>
+          <th>פעולה</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in progresses %}
+        <tr>
+          <td>
+            <div style="font-weight:600">{{ p.lesson.title }}</div>
+            <div style="font-size:0.78rem;color:#64748b">{{ p.lesson.topic }}</div>
+          </td>
+          <td>{{ '✅' if p.reading_done else '⬜' }}</td>
+          <td>{{ '✅' if p.words_studied else '⬜' }}</td>
+          <td>
+            {% if p.quiz_stage1_done %}
+            <span class="badge badge-{{ 'success' if p.stage1_score >= 70 else 'warning' }}">{{ p.stage1_score | int }}%</span>
+            {% else %}⬜{% endif %}
+          </td>
+          <td>
+            {% if p.quiz_stage2_done %}
+            <span class="badge badge-{{ 'success' if p.stage2_score >= 70 else 'warning' }}">{{ p.stage2_score | int }}%</span>
+            {% else %}⬜{% endif %}
+          </td>
+          <td>
+            <a href="/lessons/{{ p.lesson_id }}" class="btn btn-outline btn-sm">פתח</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center" style="padding:2rem">טרם התחלת שיעורים. <a href="/">בחר שיעור</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

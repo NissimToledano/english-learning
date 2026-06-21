@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}מבחן - {{ lesson.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="quiz-container">
+    <!-- Header -->
+    <div class="page-header">
+      <a href="/lessons/{{ lesson.id }}" class="text-muted" style="text-decoration:none;font-size:0.875rem">← חזרה לשיעור</a>
+      <h1 class="mt-1">🎯 מבחן: {{ lesson.title }}</h1>
+    </div>
+
+    <!-- Stage Selector -->
+    <div class="steps mb-3" id="stage-selector">
+      <div class="step {{ 'done' if progress and progress.quiz_stage1_done else 'active' }}" id="stage-step-1">
+        <div class="step-num">{{ '✓' if progress and progress.quiz_stage1_done else '1' }}</div>
+        תרגום
+      </div>
+      <div class="step-divider"></div>
+      <div class="step {{ 'done' if progress and progress.quiz_stage2_done else ('active' if progress and progress.quiz_stage1_done else '') }}" id="stage-step-2">
+        <div class="step-num">{{ '✓' if progress and progress.quiz_stage2_done else '2' }}</div>
+        שימוש במשפט
+      </div>
+    </div>
+
+    <!-- Quiz Area -->
+    <div id="quiz-area">
+      <!-- Stage 1 -->
+      <div id="stage-1" class="{% if progress and progress.quiz_stage1_done %}hidden{% endif %}">
+        <div class="card mb-2" style="background:#eef2ff;border-color:#c7d2fe">
+          <h3 style="color:#4f46e5">שלב 1: תרגום 🔤</h3>
+          <p class="text-muted" style="font-size:0.875rem">תרגם כל מילה לעברית. בחר את התרגום הנכון מבין האפשרויות.</p>
+        </div>
+        <div id="quiz-cards-stage1"></div>
+        <div id="stage1-result" class="hidden text-center card mt-2">
+          <div class="result-circle">
+            <div class="result-score" id="stage1-score-text">0%</div>
+          </div>
+          <h2>שלב 1 הושלם!</h2>
+          <p class="text-muted" id="stage1-detail"></p>
+          <button class="btn btn-primary btn-lg mt-3" onclick="startStage2()">
+            המשך לשלב 2 ➜
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 2 -->
+      <div id="stage-2" class="{% if not (progress and progress.quiz_stage1_done) or (progress and progress.quiz_stage2_done) %}hidden{% endif %}">
+        <div class="card mb-2" style="background:#f0fdf4;border-color:#86efac">
+          <h3 style="color:#16a34a">שלב 2: שימוש במשפט ✍️</h3>
+          <p class="text-muted" style="font-size:0.875rem">כתוב משפט מלא באנגלית עם כל מילה. המשפט חייב להכיל את המילה בצורה נכונה.</p>
+        </div>
+        <div id="quiz-cards-stage2"></div>
+        <div id="stage2-result" class="hidden text-center card mt-2">
+          <div class="result-circle" style="background:linear-gradient(135deg,#22c55e,#16a34a)">
+            <div class="result-score" id="stage2-score-text">0%</div>
+          </div>
+          <h2>🎉 כל הכבוד! השיעור הושלם!</h2>
+          <p class="text-muted" id="stage2-detail"></p>
+          <div class="flex gap-2 justify-center mt-3" style="flex-wrap:wrap">
+            <a href="/" class="btn btn-outline">חזרה לשיעורים</a>
+            <a href="/lessons/{{ lesson.id }}" class="btn btn-primary">חזור לשיעור</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Already Completed -->
+      {% if progress and progress.quiz_stage2_done %}
+      <div class="card text-center" style="padding:2.5rem">
+        <div style="font-size:3.5rem;margin-bottom:1rem">🏆</div>
+        <h2>השיעור הושלם!</h2>
+        <div class="flex gap-2 justify-center mt-2" style="flex-wrap:wrap">
+          <div class="badge badge-success" style="font-size:0.95rem;padding:0.4rem 1rem">שלב 1: {{ progress.stage1_score | int }}%</div>
+          <div class="badge badge-success" style="font-size:0.95rem;padding:0.4rem 1rem">שלב 2: {{ progress.stage2_score | int }}%</div>
+        </div>
+        <p class="text-muted mt-2">ממוצע: <strong>{{ ((progress.stage1_score + progress.stage2_score) / 2) | int }}%</strong></p>
+        <div class="flex gap-2 justify-center mt-3" style="flex-wrap:wrap">
+          <a href="/" class="btn btn-outline">כל השיעורים</a>
+          <button class="btn btn-primary" onclick="retakeQuiz()">חזרה על המבחן</button>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+const WORDS = {{ words_json | safe }};
+const LESSON_ID = {{ lesson.id }};
+const ALREADY_DONE_S1 = {{ 'true' if progress and progress.quiz_stage1_done else 'false' }};
+const ALREADY_DONE_S2 = {{ 'true' if progress and progress.quiz_stage2_done else 'false' }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/quiz.js"></script>
+{% endblock %}

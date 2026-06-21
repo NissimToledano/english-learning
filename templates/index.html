@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}שיעורים{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header flex items-center justify-between">
+    <div>
+      <h1>שיעורי אנגלית</h1>
+      <p>
+        {% set level_label = 'מתחיל' if user.level == 'beginner' else ('מתקדם' if user.level == 'advanced' else 'בינוני') %}
+        רמתך הנוכחית: <strong>{{ level_label }}</strong> — מוצגים השיעורים המתאימים לך
+      </p>
+    </div>
+    {% if user.is_admin %}
+    <a href="/admin/lessons/new" class="btn btn-primary">+ שיעור חדש</a>
+    {% endif %}
+  </div>
+
+  <!-- Level filter -->
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap">
+    <button class="btn btn-primary btn-sm" onclick="filterLevel('my')" id="f-my">מומלץ לי</button>
+    <button class="btn btn-outline btn-sm" onclick="filterLevel('all')" id="f-all">כל הרמות</button>
+    <button class="btn btn-outline btn-sm" onclick="filterLevel('beginner')" id="f-beginner">מתחיל</button>
+    <button class="btn btn-outline btn-sm" onclick="filterLevel('intermediate')" id="f-intermediate">בינוני</button>
+    <button class="btn btn-outline btn-sm" onclick="filterLevel('advanced')" id="f-advanced">מתקדם</button>
+  </div>
+
+  {% if lessons %}
+  <div class="lessons-grid" id="lessons-grid">
+    {% for lesson in lessons %}
+    {% set p = progress_map.get(lesson.id) %}
+    {% set steps_done = [p.reading_done, p.words_studied, p.quiz_stage1_done, p.quiz_stage2_done] | select | list | length if p else 0 %}
+    <a class="lesson-card" href="/lessons/{{ lesson.id }}"
+       data-level="{{ lesson.level }}"
+       data-user-level="{{ user.level }}">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.3rem">
+        <span class="lesson-topic">{{ lesson.topic }}</span>
+        <div style="display:flex;gap:0.4rem;align-items:center">
+          {% if lesson.week_number %}
+          <span style="font-size:0.72rem;color:#94a3b8">שבוע {{ lesson.week_number }}</span>
+          {% endif %}
+          {% if lesson.level == user.level %}
+          <span class="badge badge-success" style="font-size:0.7rem">מומלץ</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="lesson-title">{{ lesson.title }}</div>
+
+      <div class="lesson-meta">
+        <span>{{ lesson.words | length }} מילים</span>
+        <span class="badge badge-{{ 'info' if lesson.level == 'beginner' else ('warning' if lesson.level == 'intermediate' else 'muted') }}">
+          {{ 'מתחיל' if lesson.level == 'beginner' else ('בינוני' if lesson.level == 'intermediate' else 'מתקדם') }}
+        </span>
+      </div>
+
+      {% if p %}
+      <div>
+        <div class="flex items-center justify-between mb-1" style="font-size:0.78rem;color:#64748b">
+          <span>התקדמות</span>
+          <span>{{ steps_done }}/4</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill {{ 'green' if steps_done == 4 else 'blue' }}"
+               style="width:{{ (steps_done / 4 * 100) | int }}%"></div>
+        </div>
+      </div>
+      {% if p.quiz_stage1_done %}
+      <div style="font-size:0.8rem;color:#64748b">
+        שלב 1: <strong>{{ p.stage1_score | int }}%</strong>
+        {% if p.quiz_stage2_done %} | שלב 2: <strong>{{ p.stage2_score | int }}%</strong>{% endif %}
+      </div>
+      {% endif %}
+      {% if steps_done == 4 %}
+      <span class="badge badge-success">הושלם</span>
+      {% else %}
+      <span class="badge badge-muted">{{ steps_done }}/4 שלבים</span>
+      {% endif %}
+      {% else %}
+      <span class="badge badge-muted">טרם התחלת</span>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="card text-center" style="padding:3rem">
+    <h3>אין שיעורים זמינים עדיין</h3>
+    {% if user.is_admin %}
+    <a href="/admin/lessons/new" class="btn btn-primary mt-3">+ צור שיעור ראשון</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+const USER_LEVEL = "{{ user.level or 'intermediate' }}";
+
+function filterLevel(lvl) {
+  document.querySelectorAll('[id^="f-"]').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-outline');
+  });
+  document.getElementById('f-' + lvl).classList.remove('btn-outline');
+  document.getElementById('f-' + lvl).classList.add('btn-primary');
+
+  document.querySelectorAll('.lesson-card').forEach(card => {
+    const cardLevel = card.dataset.level;
+    if (lvl === 'all') {
+      card.style.display = '';
+    } else if (lvl === 'my') {
+      card.style.display = cardLevel === USER_LEVEL ? '' : 'none';
+    } else {
+      card.style.display = cardLevel === lvl ? '' : 'none';
+    }
+  });
+}
+
+// Start with recommended
+filterLevel('my');
+</script>
+{% endblock %}

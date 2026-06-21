@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>כניסה | אנגלית לנוער</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div style="font-size:3rem;margin-bottom:0.5rem">📚</div>
+        <h1>אנגלית לנוער</h1>
+        <p>English Learning Platform</p>
+      </div>
+
+      {% if error %}
+      <div class="auth-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="/login">
+        <div class="form-group">
+          <label>שם משתמש</label>
+          <input type="text" name="username" placeholder="הזן שם משתמש" required autofocus>
+        </div>
+        <div class="form-group">
+          <label>סיסמה</label>
+          <input type="password" name="password" placeholder="הזן סיסמה" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem">
+          כניסה
+        </button>
+      </form>
+
+      <p class="text-muted text-center mt-2">
+        אין לך חשבון? <a href="/register">הרשמה</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

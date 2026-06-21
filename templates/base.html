@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}English Learning{% endblock %} | אנגלית לנוער</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% if user %}
+  <nav>
+    <a class="nav-brand" href="/">
+      📚 English Learning
+    </a>
+    <div class="nav-links">
+      <a href="/">שיעורים</a>
+      <a href="/profile">הפרופיל שלי</a>
+      {% if user.is_admin %}<a href="/admin">ניהול</a>{% endif %}
+      <a href="/logout">יציאה</a>
+    </div>
+    <div class="nav-user">
+      <div class="nav-avatar">{{ user.username[0].upper() }}</div>
+      <span>{{ user.username }}</span>
+    </div>
+  </nav>
+  {% endif %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="/static/js/main.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
