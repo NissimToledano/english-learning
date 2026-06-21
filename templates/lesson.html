@@ -67,21 +67,15 @@
 
   <!-- Words Tab -->
   <div class="tab-panel" id="tab-words">
-    <div class="mb-2 flex justify-between items-center">
-      <p class="text-muted">לחץ על כרטיס כדי לראות/להסתיר את התרגום</p>
-      <button class="btn btn-outline btn-sm" onclick="toggleAllCards()">הצג/הסתר הכל</button>
-    </div>
     <div class="words-grid" id="words-grid">
       {% for word in lesson.words %}
-      <div class="word-card" onclick="flipCard(this)">
+      <div class="word-card">
         <div class="word-english">{{ word.english }}</div>
-        {% if word.phonetic %}<div class="word-phonetic">{{ word.phonetic }}</div>{% endif %}
         {% if word.word_type %}<span class="word-type">{{ word.word_type }}</span>{% endif %}
-        <div class="word-hebrew hidden rtl">{{ word.hebrew }}</div>
+        <div class="word-hebrew rtl">{{ word.hebrew }}</div>
         {% if word.example_sentence %}
-        <div class="word-example hidden">{{ word.example_sentence }}</div>
+        <div class="word-example" style="font-size:0.8rem;color:#64748b;margin-top:0.4rem;font-style:italic">{{ word.example_sentence }}</div>
         {% endif %}
-        <div class="word-hint" style="font-size:0.72rem;color:#a0aec0">👆 לחץ לתרגום</div>
       </div>
       {% endfor %}
     </div>
